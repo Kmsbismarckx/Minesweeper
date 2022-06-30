@@ -1,0 +1,12 @@
+body {
+  font-family: monospace;
+}
+
+.field {
+  display: grid;
+}
+
+button {
+  height: 40px;
+  font-size: 24px;
+}
