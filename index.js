@@ -1,34 +1,45 @@
-function gameStart(size, bombsCount) {
+function gameStart(size) {
+  let bombsCount = 1 /*size * 1.5*/;
   const field = document.querySelector('.field');
   const cellsCount = Math.pow(size, 2);
-  const bombImg = '<img src="img/naval-mine.png" width="40" height="40">';
+  const bombImg = '<img src="img/naval-mine.png" width="35" height="35">';
 
   field.style.gridTemplateColumns = `repeat(${size}, 40px)`;
   field.style.width = `${size * 40}px`;
   field.innerHTML = '<button></button>'.repeat(cellsCount);
-  const cells = [...field.children]
+  const cells = [...field.children];
+
+  for (let i = 0; i < cells.length; i++) {
+    cells[i].id = i + 1;
+  }
 
   const bombs = [...Array(cellsCount).keys()]
     .sort(() => Math.random() - 0.5)
     .slice(0, bombsCount);
+    console.log(bombs);
+
+  let flags = [];
 
   field.addEventListener('click', (event) => {
     if (event.target.tagName !== 'BUTTON') {
       return;
     }
 
-    const index = cells.indexOf(event.target);
+    const index = event.target.id - 1;
     const column = index % size;
-    const row = Math.floor(index / size);
-    open(row, column)
+    const row = Math.floor((index) / size);
+    open(row, column, index)
   });
 
   field.addEventListener('contextmenu', (event) => {
     event.preventDefault();
+    if (event.target.tagName !== 'BUTTON') {
+      return;
+    }
+    toggleFlag(event.target);
   })
 
-  function open(row, column) {
-    const index = row * size + column;
+  function open(row, column, index) {
     const cell = cells[index];
     cell.innerHTML = isBomb(row, column) ?
       gameOver(cells, bombs, bombImg, field) :
@@ -38,6 +49,20 @@ function gameStart(size, bombsCount) {
   }
 
   let count = 0;
+
+  function toggleFlag(item) {
+    let index = item.id - 1;
+
+    if (flags.includes(index)) {
+      flags = flags.filter(item => item != index);
+      item.style.backgroundImage = 'inherit';
+    } else {
+      flags.push(index);
+      item.style.backgroundImage = 'url(img/flag.svg)';
+      console.log(flags);
+    }
+    gameWin(bombs, flags, field, cells);
+  }
 
   function isBomb(row, column) {
     const index = row * size + column;
@@ -125,6 +150,7 @@ function gameStart(size, bombsCount) {
       isBomb(row + 1, column - 1);
       isBomb(row + 1, column + 1);
       isBomb(row - 1, column + 1);
+      return count;
     }
 
     return count;
@@ -132,9 +158,16 @@ function gameStart(size, bombsCount) {
 
 }
 
+function gameWin(bombs, flags, field, cells) {
+  if (bombs.sort().join(',') === flags.sort().join(',')) {
+      field.classList.add('win');
+      cells.map((item) => item.disabled = true);
+  }
+}
+
 function gameOver(cells, bombs, bombImg, field) {
 
-  cells.map((item) => item.disabled = true)
+  cells.map((item) => item.disabled = true);
 
   for (let i = 0; i < cells.length; i++) {
 
@@ -149,7 +182,6 @@ function gameOver(cells, bombs, bombImg, field) {
   }
 
   field.classList.add('lose');
-  console.log(field.width);
 
   return bombImg;
 }
@@ -158,4 +190,4 @@ function init(size, bombsCount) {
   gameStart(size, bombsCount);
 }
 
-init(10, 15)
+init(10)
